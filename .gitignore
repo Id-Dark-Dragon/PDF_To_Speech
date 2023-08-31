@@ -1,0 +1,9 @@
+main.txt
+تعالیم پائولو کوئلیو و ناسازگاری های آن با.pdf
+ts.py
+.env
+
+_pycache__/
+
+# Ignore IDE-specific files
+*.idea/
