@@ -1,6 +1,6 @@
 import os
 import requests
-from configs import VOICERSS_SIZE_LIMIT, API_KEY
+from configs import VOICERSS_SIZE_LIMIT, API_KEY, LANGUAGE
 
 
 class Connection:
@@ -9,15 +9,16 @@ class Connection:
         self.tx = text
         self.file_save_name = file_save_name
         self.file_save_folder = file_save_folder
-
-        self.to_voice()
+        self.progress = '**'
 
     def to_voice(self):
         """Gets a list contains page-number and text,
         uses slicer to chop it for api standardization and sent it to api"""
         self.text_slicer()
         for i, tx in enumerate(self.text_slice_list):
+            print(self.progress)
             self.api_connection(tx, i)
+        return True
 
     def text_slicer(self):
         """ Dou to Voice-rss api limitation for sending text, we need to chp off the text in multiple parts"""
@@ -37,11 +38,12 @@ class Connection:
         params = {
             "key": API_KEY,
             "src": tx,
-            "hl": "en-ca",
+            "hl": LANGUAGE,
         }
         resp = requests.get("http://api.voicerss.org", params=params)
 
         file_loc_name = self.file_save_folder + r"\\" + self.file_save_name + "-voice" + f'{number+1}' + ".wav"
         with open(file_loc_name, mode="wb",) as audio:
             audio.write(resp.content)
+
 

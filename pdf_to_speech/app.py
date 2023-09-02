@@ -1,20 +1,16 @@
 import os
 
+from configs import HEADER_FOOTER_TRIM
 from pdf_to_speech.pdf_to_text.text_extract import page_reader
-from text_to_speech.voicerss_connection import Connection
-
-pathfile = r"F:\Users\app_test.pdf"
-pathfile2 = r"E:\Tutorials\Code The Complete Python Pro Bootcamp 2022\7.Professional\90 Day 90 - Professional Portfolio Project - [HTTP Requests _ APIs]\prj\app_test.pdf"
+from pdf_to_speech.text_to_speech.voicerss_connection import Connection
 
 
 class App:
     def __init__(self):
-        self.voice_cut_per_page = "NO"
-        self.file_loc = pathfile
+        self.voice_cut_per_page = "YES"
+        self.file_loc = None
         self.pages_num_input = "2-3"
         self.page_order_list = []
-
-        self.preparation_input()
 
     def preparation_input(self):
         self.file_loc = input("1. Input absolute path of your pdf file:  ")
@@ -26,16 +22,16 @@ class App:
 
         self.file_loc = fr"{self.file_loc}"
         self.pages_num_input = self.pages_num_input.replace(" ", "")
-        self.voice_cut_per_page = self.voice_cut_per_page.capitalize().replace(" ", "")
+        self.voice_cut_per_page = self.voice_cut_per_page.upper().replace(" ", "")
 
-        self.page_orderer()
+        self.manager()
 
     def page_orderer(self):
         """ This Function makes a listr of the desired pages."""
         # Page Range Selection
         if "-" in self.pages_num_input:
             page1, page2 = self.pages_num_input.split("-")
-            page_order_list = [int(i) - 1 for i in range(int(page1), int(page2))]
+            page_order_list = [int(i) - 1 for i in range(int(page1), int(page2)+1)]
 
         # individual page selection
         elif "," in self.pages_num_input:
@@ -45,11 +41,12 @@ class App:
         else:
             page_order_list = [int(self.pages_num_input) - 1]
 
-        self.manager(page_order_list=page_order_list)
+        return page_order_list
 
-    def manager(self, page_order_list):
-        contents = page_reader(self.file_loc, pages_list=page_order_list, head_foot_trim=False)
-
+    def manager(self):
+        page_order_list = self.page_orderer()
+        contents = page_reader(self.file_loc, pages_list=page_order_list, head_foot_trim=HEADER_FOOTER_TRIM)
+        print("_____________\nText Extracted!")
         # make a folder with pdf name
         if not os.path.exists(self.file_loc[0:-4]):
             os.mkdir(self.file_loc[0:-4])
@@ -57,19 +54,20 @@ class App:
 
         if self.voice_cut_per_page == "YES":
             for content in contents:
-                Connection(text=content[1], file_save_name=f"{save_name_prefix}-page{content[0]}",
-                           file_save_folder=self.file_loc[0:-4])
-                # print(content[1].replace(r'/n', " "))
+                resp = Connection(text=content[1], file_save_name=f"{save_name_prefix}-page{content[0]}",
+                           file_save_folder=self.file_loc[0:-4]).to_voice()
 
         elif self.voice_cut_per_page == "NO":
             parts = []
             for content in contents:
                 parts.append(content[1])
             text = " ".join(parts)
-            Connection(text=text, file_save_name=f"{save_name_prefix}",
-                       file_save_folder=self.file_loc[0:-4])
+            resp = Connection(text=text, file_save_name=f"{save_name_prefix}",
+                       file_save_folder=self.file_loc[0:-4]).to_voice()
+
+        if resp:
+            print("Job Finished")
+            print('-------------------')
 
 
 
-if "__main__" == __name__:
-    App()
